@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClipForge</title>
+  <style>
+    :root { color-scheme: dark; --bg:#101114; --panel:#191b21; --text:#f4f5f7; --muted:#9ca3af; --accent:#ff304f; }
+    * { box-sizing:border-box; } body { margin:0; min-height:100vh; font-family:Inter,system-ui,sans-serif; background:radial-gradient(circle at top,#27151b,var(--bg) 45%); color:var(--text); display:grid; place-items:center; padding:24px; }
+    main { width:min(680px,100%); background:rgba(25,27,33,.94); border:1px solid #30333c; border-radius:20px; padding:32px; box-shadow:0 20px 70px #0008; } h1 { margin:0 0 8px; } p { color:var(--muted); } label { display:block; margin:18px 0 7px; color:#d5d7dc; } input,select,button { width:100%; border:1px solid #3a3e48; border-radius:10px; padding:12px; background:#111318; color:var(--text); font:inherit; } .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; } button { margin-top:24px; background:var(--accent); border:0; font-weight:700; cursor:pointer; } button:disabled { opacity:.55; cursor:wait; } #status { min-height:24px; margin-top:18px; } a { color:#ff7186; font-weight:700; } @media(max-width:560px){main{padding:22px}.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>ClipForge</h1>
+    <p>Potong video YouTube menjadi clip siap dibagikan.</p>
+    <form id="clipForm">
+      <label for="url">URL YouTube</label>
+      <input id="url" type="url" placeholder="https://www.youtube.com/watch?v=..." required />
+      <div class="grid">
+        <div><label for="start">Mulai</label><input id="start" value="00:00" placeholder="MM:SS" required /></div>
+        <div><label for="end">Selesai</label><input id="end" value="00:30" placeholder="MM:SS" required /></div>
+      </div>
+      <div class="grid">
+        <div><label for="ratio">Aspect ratio</label><select id="ratio"><option>9:16</option><option>16:9</option><option>1:1</option></select></div>
+        <div><label for="quality">Kualitas</label><select id="quality"><option>1080p</option><option selected>720p</option><option>480p</option></select></div>
+      </div>
+      <button id="submit" type="submit">Buat Clip</button>
+    </form>
+    <div id="status" role="status"></div>
+  </main>
+  <script>
+    const form = document.querySelector('#clipForm'); const status = document.querySelector('#status'); const button = document.querySelector('#submit');
+    function getVideoId(value) { try { const url = new URL(value); if (url.hostname === 'youtu.be') return url.pathname.slice(1).split('/')[0]; if (url.hostname.endsWith('youtube.com')) return url.searchParams.get('v') || url.pathname.match(/\/(?:shorts|embed)\/([^/?]+)/)?.[1]; } catch {} return null; }
+    form.addEventListener('submit', async (event) => { event.preventDefault(); const videoId = getVideoId(document.querySelector('#url').value); if (!videoId) { status.textContent = 'Masukkan URL YouTube yang valid.'; return; } button.disabled = true; status.textContent = 'Sedang memproses video...'; try { const response = await fetch('/api/clip', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ videoId, start:document.querySelector('#start').value, end:document.querySelector('#end').value, aspectRatio:document.querySelector('#ratio').value, quality:document.querySelector('#quality').value }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || 'Proses gagal.'); status.innerHTML = `<a href="${data.downloadUrl}" download>Download clip Anda</a>`; } catch (error) { status.textContent = error.message; } finally { button.disabled = false; } });
+  </script>
+</body>
+</html>
