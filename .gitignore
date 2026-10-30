@@ -1,6 +1,7 @@
-node_modules/
 downloads/*
 temp/*
 .env
 *.mp4
 *.webm
+/clipforge
+/clipforge.exe

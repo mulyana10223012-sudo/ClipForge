@@ -1,5 +1,9 @@
 # ClipForge
 
+> Versi Go dari ClipForge. Backend ditulis ulang dari Node.js ke Go
+> (hanya pustaka standar, tanpa dependensi luar). Antarmuka web
+> (`public/index.html`) dan semua endpoint API tidak berubah.
+
 Potong video YouTube menjadi clip siap dibagikan, lewat antarmuka web sederhana.
 
 ClipForge mengunduh video dengan `yt-dlp`, memotongnya sesuai waktu yang dipilih, mengubah ukurannya sesuai aspect ratio, lalu mengemas hasilnya sebagai file MP4 (H.264 + AAC) yang bisa langsung diunduh.
@@ -24,19 +28,18 @@ Ikuti langkah-langkah berikut secara berurutan. Tutorial ini ditulis
 untuk Windows; pengguna Linux/macOS bisa memakai cara yang setara
 (misalnya `apt`, `brew`, atau unduhan biner resmi masing-masing alat).
 
-### Langkah 1 — Pasang Node.js
+### Langkah 1 — Pasang Go
 
-1. Unduh installer Node.js versi LTS dari https://nodejs.org/.
+1. Unduh installer Go dari https://go.dev/dl/ (versi 1.23 atau lebih baru).
 2. Jalankan installer dan ikuti sampai selesai (biarkan opsi bawaan).
 3. Buka terminal baru, lalu verifikasi:
 
 ```powershell
-node -v
-npm -v
+go version
 ```
 
-Keduanya harus menampilkan nomor versi. Bila tidak dikenali, tutup
-terminal dan buka lagi, atau pasang ulang Node.js.
+Perintah itu harus menampilkan nomor versi Go. Bila tidak dikenali,
+tutup terminal dan buka lagi, atau pasang ulang Go.
 
 ### Langkah 2 — Pasang FFmpeg
 
@@ -91,32 +94,41 @@ Keduanya harus menampilkan nomor versi. Bila masih muncul pesan
 "not recognized", ulangi langkah 2–3 dan pastikan terminal yang dipakai
 adalah terminal baru.
 
-### Langkah 5 — Clone dan jalankan ClipForge
+### Langkah 5 — Clone, build, dan jalankan ClipForge
 
 ```bash
 git clone https://github.com/mulyana10223012-sudo/ClipForge.git
 cd ClipForge
-npm install
-npm start
+go build -o clipforge .
+./clipforge
 ```
 
-Tunggu sampai muncul tulisan `ClipForge berjalan di http://localhost:3000`,
-lalu buka http://localhost:3000/ di browser. Jangan tutup terminal
-`npm start` selama memakai ClipForge, karena menutupnya akan
-menghentikan server.
+Di Windows, jalankan berkas hasil build-nya:
+
+```powershell
+.\clipforge.exe
+```
+
+Tidak ada `npm install` — Go tidak memakai dependensi luar, jadi
+cukup `go build`. Tunggu sampai muncul tulisan
+`ClipForge berjalan di http://localhost:3000`, lalu buka
+http://localhost:3000/ di browser. Jangan tutup terminal selama
+memakai ClipForge, karena menutupnya akan menghentikan server.
+Untuk menjalankan tanpa build dulu, bisa juga memakai
+`go run .`.
 
 Bila port 3000 sudah dipakai aplikasi lain, jalankan dengan port
 berbeda, misalnya:
 
 ```bash
 # Linux/macOS
-PORT=3001 npm start
+PORT=3001 ./clipforge
 
 # Windows (Command Prompt)
-set PORT=3001 && npm start
+set PORT=3001 && clipforge.exe
 
 # Windows (PowerShell)
-$env:PORT=3001; npm start
+$env:PORT=3001; .\clipforge.exe
 ```
 
 ## Cara memakai
@@ -259,9 +271,11 @@ Hasil clip dilayani lewat `GET /downloads/<nama-file>.mp4`.
 ## Struktur proyek
 
 ```
-server.js           # Server Express + endpoint /api/clip
+main.go             # Server Go + endpoint /api/clip, /api/clips, /api/viral
+main_test.go        # Tes unit (parse waktu, potong subtitle, skor viral, filter)
+go.mod              # Modul Go (tanpa dependensi luar)
 public/
-  index.html        # Antarmuka web
+  index.html        # Antarmuka web (tidak berubah dari versi Node)
 downloads/          # Hasil clip (tidak ikut commit, lihat .gitignore)
 temp/               # Folder kerja sementara saat memproses video
 ```
@@ -270,6 +284,6 @@ temp/               # Folder kerja sementara saat memproses video
 
 | Gejala | Kemungkinan penyebab / solusi |
 | --- | --- |
-| `Gagal memproses video. Pastikan FFmpeg dan yt-dlp sudah terpasang.` | FFmpeg atau yt-dlp belum terpasang, atau belum masuk PATH. Pasang keduanya, buka terminal baru, verifikasi dengan `ffmpeg -version` dan `yt-dlp --version`, lalu restart server (`Ctrl+C`, `npm start` lagi). |
-| Halaman tidak terbuka di `localhost:3000` | Coba `http://127.0.0.1:3000/`, dan pastikan terminal `npm start` masih berjalan. |
+| `Gagal memproses video. Pastikan FFmpeg dan yt-dlp sudah terpasang.` | FFmpeg atau yt-dlp belum terpasang, atau belum masuk PATH. Pasang keduanya, buka terminal baru, verifikasi dengan `ffmpeg -version` dan `yt-dlp --version`, lalu restart server (`Ctrl+C`, jalankan lagi berkas hasil build). |
+| Halaman tidak terbuka di `localhost:3000` | Coba `http://127.0.0.1:3000/`, dan pastikan terminal server masih berjalan. |
 | Port 3000 sudah dipakai | Jalankan dengan `PORT` lain seperti contoh di atas. |
