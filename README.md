@@ -14,6 +14,9 @@ ClipForge mengunduh video dengan `yt-dlp`, memotongnya sesuai waktu yang dipilih
 - Hasil berupa tautan unduhan MP4.
 - Potong otomatis jadi beberapa clip dari satu video (lihat
   "Potong otomatis jadi beberapa clip" di bawah).
+- Mode viral: cari momen berpotensi viral dari transkrip video.
+- Subtitle otomatis yang dibakar ke video, diambil dari caption
+  YouTube bila tersedia.
 
 ## Tutorial instalasi
 
@@ -167,6 +170,67 @@ Responsnya berupa daftar clip beserta waktu dan tautan unduhannya:
   ]
 }
 ```
+
+## Cari momen viral
+
+Pilih mode **Cari momen viral** untuk membiarkan server mencari
+sendiri segmen-segmen yang paling berpotensi viral, tanpa harus
+menebak-nebak timestamp manual.
+
+Cara kerjanya:
+
+1. Server mengunduh caption video saja dulu (tanpa mengunduh video),
+   dari caption manual bila ada, kalau tidak ada dari caption otomatis
+   YouTube, bahasa Indonesia dulu lalu bahasa Inggris.
+2. Transkrip dibagi menjadi segmen-segmen sepanjang durasi clip yang
+   dipilih (bawaan 30 detik, bisa diubah).
+3. Tiap segmen diberi skor heuristik berdasarkan isi ucapannya:
+   kata kunci hook dan kejutan (misalnya `rahasia`, `ternyata`,
+   `tahukah`, `jangan`, `gratis`, `terbukti`), pertanyaan (`?`),
+   angka dan persen, serta kepadatan ucapan. Segmen yang hanya berisi
+   musik dinilai rendah.
+4. Segmen dengan skor tertinggi dipilih (dengan jeda minimal satu
+   segmen antar pilihan, supaya hasilnya tersebar, tidak berdekatan),
+   lalu video diunduh sekali dan hanya segmen terpilih yang dipotong.
+5. Hasilnya ditampilkan beserta skor dan kata kunci yang terdeteksi
+   di tiap clip, misalnya `Clip 1 (12:34–13:04) • Skor 32 • Kata kunci:
+   kenapa, gratis, terbukti`.
+
+Batasan yang perlu dipahami:
+
+- **Skor ini heuristik, bukan jaminan viral.** Tidak ada alat yang
+  bisa memastikan sebuah clip akan viral — skor hanya menandai
+  segmen yang secara pola kalimat mirip dengan pembuka yang biasa
+  menarik perhatian.
+- **Video tanpa caption tidak bisa dianalisis.** Bila video tidak
+  punya caption manual maupun otomatis, server akan menolak dengan
+  pesan yang jelas; untuk video seperti itu gunakan mode Beberapa
+  clip otomatis.
+- Mode Hook saja dari versi sebelumnya sudah dihapus dari tampilan
+  dan diganti mode ini, sesuai permintaan.
+
+
+## Subtitle otomatis
+
+Centang **Tambah subtitle otomatis** pada mode apa pun (satu clip,
+beberapa clip, maupun hook). Server akan mengunduh caption video
+dari YouTube — caption manual bila ada, kalau tidak ada maka caption
+otomatis YouTube — dalam bahasa Indonesia dulu, lalu bahasa Inggris
+bila tidak ada yang Indonesia. Subtitle tersebut dipotong dan
+digeser waktunya agar pas dengan clip, lalu dibakar langsung ke
+video (teks putih dengan outline hitam, di area bawah video),
+sehingga terlihat di semua pemutar dan platform, bukan subtitle
+terpisah yang bisa hilang.
+
+Batasan penting:
+
+- Bila video tidak punya caption manual maupun otomatis sama sekali,
+  clip tetap dibuat, tetapi tanpa subtitle. Respons API akan
+  mengembalikan `subtitled: false` dan catatan tersebut.
+- Subtitle mengikuti isi caption YouTube apa adanya, termasuk bila
+  caption otomatisnya kurang akurat.
+- Untuk mode beberapa clip, subtitle tiap clip dipotong dari caption
+  asli sesuai rentang waktunya masing-masing.
 
 ## API
 
