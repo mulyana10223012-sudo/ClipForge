@@ -208,7 +208,7 @@ app.post('/api/clip', async (req, res) => {
       const ytdlpArgs = ['--no-playlist', '-f', `bestvideo[height<=${QUALITY[quality]}]+bestaudio/best[height<=${QUALITY[quality]}]`, '--merge-output-format', 'mp4', '-o', source, `https://www.youtube.com/watch?v=${videoId}`];
       if (subtitles) ytdlpArgs.push('--write-subs', '--write-auto-subs', '--sub-lang', 'id,en', '--convert-subs', 'srt');
       await execFileAsync('yt-dlp', ytdlpArgs, { maxBuffer: 10 * 1024 * 1024 });
-      const downloaded = (await fs.readdir(jobDir)).find((name) => name.startsWith('source.'));
+      const downloaded = (await fs.readdir(jobDir)).find((name) => name.startsWith('source.') && /\.(mp4|webm|mkv|mov)$/i.test(name));
       if (!downloaded) fail('Video tidak berhasil diunduh.', 502);
       const downloadedPath = path.join(jobDir, downloaded);
       if (downloadedPath !== input) await fs.rename(downloadedPath, input);
@@ -267,7 +267,7 @@ app.post('/api/clips', async (req, res) => {
       const ytdlpArgs = ['--no-playlist', '-f', `bestvideo[height<=${QUALITY[quality]}]+bestaudio/best[height<=${QUALITY[quality]}]`, '--merge-output-format', 'mp4', '-o', source, `https://www.youtube.com/watch?v=${videoId}`];
       if (subtitles) ytdlpArgs.push('--write-subs', '--write-auto-subs', '--sub-lang', 'id,en', '--convert-subs', 'srt');
       await execFileAsync('yt-dlp', ytdlpArgs, { maxBuffer: 10 * 1024 * 1024 });
-      const downloaded = (await fs.readdir(jobDir)).find((name) => name.startsWith('source.'));
+      const downloaded = (await fs.readdir(jobDir)).find((name) => name.startsWith('source.') && /\.(mp4|webm|mkv|mov)$/i.test(name));
       if (!downloaded) fail('Video tidak berhasil diunduh.', 502);
       const downloadedPath = path.join(jobDir, downloaded);
       if (downloadedPath !== input) await fs.rename(downloadedPath, input);
@@ -340,7 +340,7 @@ app.post('/api/viral', async (req, res) => {
 
       // Langkah 2: unduh video sekali, lalu potong hanya momen terpilih.
       await execFileAsync('yt-dlp', ['--no-playlist', '-f', `bestvideo[height<=${QUALITY[quality]}]+bestaudio/best[height<=${QUALITY[quality]}]`, '--merge-output-format', 'mp4', '-o', source, `https://www.youtube.com/watch?v=${videoId}`], { maxBuffer: 10 * 1024 * 1024 });
-      const downloaded = (await fs.readdir(jobDir)).find((name) => name.startsWith('source.'));
+      const downloaded = (await fs.readdir(jobDir)).find((name) => name.startsWith('source.') && /\.(mp4|webm|mkv|mov)$/i.test(name));
       if (!downloaded) fail('Video tidak berhasil diunduh.', 502);
       const downloadedPath = path.join(jobDir, downloaded);
       if (downloadedPath !== input) await fs.rename(downloadedPath, input);
